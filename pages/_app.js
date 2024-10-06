@@ -1,5 +1,4 @@
-// pages/_app.js
-import '../styles/global.css'; // Import global CSS here
+import '../styles/global.css';
 import { MantineProvider, Global } from '@mantine/core';
 
 if (process.env.NODE_ENV === 'production') {
@@ -7,7 +6,7 @@ if (process.env.NODE_ENV === 'production') {
   console.log = function () {};
   console.info = function () {};
   console.warn = function () {};
-  console.error = function () {}; // You can also keep error logs if needed, by not disabling this one
+  console.error = function () {}; 
 }
 
 function MyApp({ Component, pageProps }) {
@@ -16,9 +15,9 @@ function MyApp({ Component, pageProps }) {
       <Global
         styles={(theme) => ({
           body: {
-            backgroundColor: '#0B192C', // Set your desired background color
+            backgroundColor: '#0B192C',
             margin: 0,
-            minHeight: '100vh', // Ensure it covers full height
+            minHeight: '100vh', 
             color:'white'
           },
         })}
