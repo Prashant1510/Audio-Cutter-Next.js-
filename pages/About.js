@@ -21,6 +21,8 @@ export default function About() {
         3. Click on the "Cut Audio" button to process the audio.
         <br />
         4. Once done, you can listen to the cut audio and download it if desired.
+        <br />
+        Note: Due to using free hosting, this site may work slow.
       </Text>
 
       <Box mt="md" display="flex" justifyContent="center">
