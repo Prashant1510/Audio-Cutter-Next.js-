@@ -1,0 +1,23 @@
+{
+  "name": "my-audio-cutter",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.10.0",
+    "@ffmpeg/ffmpeg": "^0.10.1",
+    "@mantine/core": "^6.0.0",
+    "@mantine/hooks": "^6.0.0",
+    "@mantine/notifications": "^6.0.0",
+    "@tabler/icons-react": "^3.19.0",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "wavesurfer.js": "^7.8.6"
+  }
+}
