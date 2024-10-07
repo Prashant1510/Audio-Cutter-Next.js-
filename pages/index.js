@@ -236,7 +236,7 @@ const handleCut = async () => {
                 height: '100%',
                 width: '2px',
                 backgroundColor: 'red',
-                zIndex: 1,
+                zIndex: 200,
               }}
             />
             {/* End Line */}
@@ -247,7 +247,7 @@ const handleCut = async () => {
                 height: '100%',
                 width: '2px',
                 backgroundColor: 'blue',
-                zIndex: 1,
+                zIndex: 200,
               }}
             />
           </div>
