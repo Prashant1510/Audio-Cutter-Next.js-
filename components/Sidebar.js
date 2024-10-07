@@ -1,6 +1,7 @@
 import { Drawer, Button, Group } from '@mantine/core';
 import { IconHome, IconInfoCircle } from '@tabler/icons-react'; 
 import Link from 'next/link';
+
 const Sidebar = ({ opened, onClose }) => {
   return (
     <Drawer
@@ -8,28 +9,28 @@ const Sidebar = ({ opened, onClose }) => {
       onClose={onClose}
       title="Menu"
       padding="lg"
-      style={{ width: '200px' }} 
+      size="150px"  
     >
       <Group direction="column" spacing="md" style={{ width: '100%' }}>
-      <Link href="/">
-        <Button
-          variant="subtle"
-          onClick={onClose} 
-          leftIcon={<IconHome size={16} />}
-          style={{ justifyContent: 'flex-start', width: '100%' }} 
-        >
-          Home
-        </Button>
+        <Link href="/">
+          <Button
+            variant="subtle"
+            onClick={onClose} 
+            leftIcon={<IconHome size={20} />}
+            style={{ justifyContent: 'flex-start', width: '100%' }} 
+          >
+            Home
+          </Button>
         </Link>
-        <Link href="/About" >
-        <Button
-          variant="subtle"
-          onClick={onClose} 
-          leftIcon={<IconInfoCircle size={16} />}
-          style={{ justifyContent: 'flex-start', width: '100%' }} 
-        >
-          About
-        </Button>
+        <Link href="/About">
+          <Button
+            variant="subtle"
+            onClick={onClose} 
+            leftIcon={<IconInfoCircle size={20} />}
+            style={{ justifyContent: 'flex-start', width: '100%' }} 
+          >
+            About
+          </Button>
         </Link>
       </Group>
     </Drawer>

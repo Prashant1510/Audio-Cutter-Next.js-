@@ -138,6 +138,7 @@ const handleCut = async () => {
   // Trimming audio
   const handleTrim = async () => {
     setLoading(true);
+    setIsPlaying(false);
     try {
       // Check if FFmpeg is already loaded
       if (!ffmpeg.isLoaded()) {
@@ -213,8 +214,8 @@ const handleCut = async () => {
         <IconMenu2 />
       </Button>
       <Sidebar opened={sidebarOpened} onClose={() => setSidebarOpened(false)} />
-      <Title>Audio Cutter</Title>
-      <Text mt="md">Free editor to trim and cut any audio file online</Text>
+      <Title style={{ fontSize: '40px' }}>Audio Cutter</Title>
+      <Text mt="md" style={{ fontSize: '30px' }}>Free editor to trim and cut any audio file online</Text>
       <Group position="center" mt="xl">
         <FileInput
           placeholder="Select Audio File"
@@ -288,14 +289,14 @@ const handleCut = async () => {
             label={null}
           />
 
-          <Button onClick={togglePlayPause} style={{ marginTop: '20px' }}>
+          <Button onClick={togglePlayPause} style={{ marginTop: '20px', borderRadius: '5px' , backgroundColor:'#41B3A2' }}>
             {isPlaying ? "Pause" : "Play"}
           </Button>
 
-          <Button onClick={handleCut} style={{ marginTop: '20px', marginLeft: '10px' }} disabled={loading}>
+          <Button onClick={handleCut} style={{ marginTop: '20px', marginLeft: '10px', borderRadius: '5px', backgroundColor:'#41B3A2' }} disabled={loading}>
             Cut Audio
           </Button>
-          <Button onClick={handleTrim} style={{ marginTop: '20px', marginLeft: '10px' }} disabled={loading}>
+          <Button onClick={handleTrim} style={{ marginTop: '20px', marginLeft: '10px', borderRadius: '5px', backgroundColor:'#41B3A2' }} disabled={loading}>
             Trim Audio
           </Button>
 
