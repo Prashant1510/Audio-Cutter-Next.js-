@@ -28,16 +28,8 @@ const formatTime = (seconds) => {
 };
 
 export default function Home() {
-
-    // State to manage sidebar open/close
-    const [sidebarOpened, setSidebarOpened] = useState(false);
-
-    // Function to toggle sidebar
-    const toggleSidebar = () => {
-      setSidebarOpened((prev) => !prev);
-    };
-
-  const [audioFile, setAudioFile] = useState(null);
+  const [sidebarOpened, setSidebarOpened] = useState(false);
+  const [audioFile, setAudioFile] = useState(null); // Original or latest trimmed audio file
   const [cutAudio, setCutAudio] = useState(null);
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(0);
@@ -45,8 +37,24 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null); // Store trimmed audio blob for future trimming
   const wavesurferRef = useRef(null);
 
+  const toggleSidebar = () => setSidebarOpened((prev) => !prev);
+
+  const loadAudioIntoWaveSurfer = (audio) => {
+    if (wavesurferRef.current) {
+      wavesurferRef.current.load(URL.createObjectURL(audio));
+      wavesurferRef.current.on('ready', () => {
+        const duration = wavesurferRef.current.getDuration();
+        setAudioDuration(duration);
+        setStart(0);
+        setEnd(duration);
+      });
+    }
+  };
+
+  // Handle file input change
   useEffect(() => {
     if (audioFile) {
       // Initialize Wavesurfer
@@ -59,15 +67,7 @@ export default function Home() {
         normalize: true,
         responsive: true,
       });
-
-      const audioUrl = URL.createObjectURL(audioFile);
-      wavesurferRef.current.load(audioUrl);
-
-      wavesurferRef.current.on('ready', () => {
-        const duration = wavesurferRef.current.getDuration();
-        setAudioDuration(duration);
-        setEnd(duration);
-      });
+      loadAudioIntoWaveSurfer(audioFile);
 
       return () => {
         wavesurferRef.current.destroy();
@@ -88,13 +88,64 @@ export default function Home() {
     }
   }, [end]);
 
-  const handleCut = async () => {
-    setLoading(true); // Start loading
+  // Watch for changes to audioBlob and reload WaveSurfer if audio is trimmed
+  useEffect(() => {
+    if (audioBlob) {
+      loadAudioIntoWaveSurfer(audioBlob);
+    }
+  }, [audioBlob]);
 
-    try {
+// Cutting audio
+const handleCut = async () => {
+  if (wavesurferRef.current) {
+    wavesurferRef.current.pause(); // Pause the audio before cutting
+    setIsPlaying(false); // Update the play state
+  }
+
+  setLoading(true);
+  try {
+    // Check if FFmpeg is already loaded
+    if (!ffmpeg.isLoaded()) {
       await ffmpeg.load();
+    }
 
-      ffmpeg.FS("writeFile", "input.mp3", await fetchFile(audioFile));
+    const currentAudioFile = audioBlob ? audioBlob : audioFile;
+    ffmpeg.FS("writeFile", "input.mp3", await fetchFile(currentAudioFile));
+
+    await ffmpeg.run(
+      "-i",
+      "input.mp3",
+      "-ss",
+      `${start}`,
+      "-to",
+      `${end}`,
+      "-c",
+      "copy",
+      "output.mp3"
+    );
+
+    const data = ffmpeg.FS("readFile", "output.mp3");
+    const url = URL.createObjectURL(new Blob([data.buffer], { type: "audio/mp3" }));
+    setCutAudio(url);
+  } catch (error) {
+    console.error("Error cutting audio:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // Trimming audio
+  const handleTrim = async () => {
+    setLoading(true);
+    try {
+      // Check if FFmpeg is already loaded
+      if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
+      }
+
+      const currentAudioFile = audioBlob ? audioBlob : audioFile;
+      ffmpeg.FS("writeFile", "input.mp3", await fetchFile(currentAudioFile));
 
       await ffmpeg.run(
         "-i",
@@ -105,18 +156,26 @@ export default function Home() {
         `${end}`,
         "-c",
         "copy",
-        "output.mp3"
+        "trimmed.mp3"
       );
 
-      const data = ffmpeg.FS("readFile", "output.mp3");
-      const url = URL.createObjectURL(
-        new Blob([data.buffer], { type: "audio/mp3" })
-      );
-      setCutAudio(url);
+      const data = ffmpeg.FS("readFile", "trimmed.mp3");
+      const trimmedBlob = new Blob([data.buffer], { type: "audio/mp3" });
+
+      // Update the state with the new trimmed audio
+      setAudioBlob(trimmedBlob); // Store trimmed audio for future cuts or trims
+      setAudioFile(new File([trimmedBlob], "trimmed.mp3", { type: "audio/mp3" }));
+
+      // Reset start and end to full length of the new trimmed audio
+      const newDuration = wavesurferRef.current.getDuration();
+      setStart(0);
+      setEnd(newDuration);
+
+      loadAudioIntoWaveSurfer(trimmedBlob); // Reload Wavesurfer with trimmed audio
     } catch (error) {
-      console.error("Error cutting audio:", error);
+      console.error("Error trimming audio:", error);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -149,8 +208,8 @@ export default function Home() {
   };
 
   return (
-    <Container style={{ textAlign: "center", padding: "80px 0", }}>
-      <Button onClick={toggleSidebar} style={{position:'absolute',top:'20px',left:'20px',zIndex:'1000'}}>
+    <Container style={{ textAlign: "center", padding: "80px 0" }}>
+      <Button onClick={toggleSidebar} style={{ position: 'absolute', top: '20px', left: '20px', zIndex: '1000' }}>
         <IconMenu2 />
       </Button>
       <Sidebar opened={sidebarOpened} onClose={() => setSidebarOpened(false)} />
@@ -232,22 +291,24 @@ export default function Home() {
           <Button onClick={togglePlayPause} style={{ marginTop: '20px' }}>
             {isPlaying ? "Pause" : "Play"}
           </Button>
-          <Button onClick={handleCut} disabled={loading} style={{ marginLeft: '10px', marginTop: '20px' }}>
-            {loading ? "Cutting..." : "Cut Audio"}
+
+          <Button onClick={handleCut} style={{ marginTop: '20px', marginLeft: '10px' }} disabled={loading}>
+            Cut Audio
           </Button>
-        </div>
-      )}
-      {cutAudio && (
-        <div style={{ marginTop: '25px', width:'100%', display:'flex' ,justifyContent:'space-evenly' }}>
-          <audio controls>
-            <source src={cutAudio} type="audio/mp3" />
-            Your browser does not support the audio tag.
-          </audio>
-          <a href={cutAudio} download="cut-audio.mp3">
-            <Button variant="outline" style={{ marginTop: '10px', color:'white', backgroundColor:'#FB773C' }}>
-              Download Cut Audio
-            </Button>
-          </a>
+          <Button onClick={handleTrim} style={{ marginTop: '20px', marginLeft: '10px' }} disabled={loading}>
+            Trim Audio
+          </Button>
+
+          {cutAudio && (
+            <div style={{ marginTop: '25px', width: '100%', display: 'flex', justifyContent: 'space-evenly' }}>
+              <audio controls src={cutAudio} />
+              <a href={cutAudio} download="cut-audio.mp3">
+                <Button variant="outline" style={{ marginTop: '10px', color: 'white', backgroundColor: '#FB773C' }}>
+                  Download Cut Audio
+                </Button>
+              </a>
+            </div>
+          )}
         </div>
       )}
     </Container>
